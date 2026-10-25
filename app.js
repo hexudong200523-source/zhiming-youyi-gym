@@ -11,7 +11,12 @@ import {RectAreaLightUniformsLib} from 'three/addons/lights/RectAreaLightUniform
 
 const $ = id => document.getElementById(id);
 const $$ = selector => [...document.querySelectorAll(selector)];
-const mobile = matchMedia('(max-width: 800px)').matches;
+const mobile = /Android|iPhone|iPad|iPod|MicroMessenger/i.test(navigator.userAgent) || matchMedia('(max-width: 800px)').matches;
+const quality = new URLSearchParams(location.search).get('quality');
+const lightMode = quality === 'lite' || (mobile && quality !== 'full');
+const conservative = mobile || lightMode;
+const paint = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+const progress = (text,percent) => window.gymBoot?.mark(text,percent);
 const V = a => new THREE.Vector3(...a);
 let manifest, schemes, model, activeScheme, selected, sceneNodes = new Map(), materials = [], equipment = [];
 let mode = 'orbit', plan = false, overview = false, clay = false, hiddenEquipment = new Set(), roofCut = false, roofAssembled = true;
@@ -21,13 +26,13 @@ let overrides = {path:'sample',wall:'scheme',metal:'silver'}, keys = new Set(), 
 const lightsState = {sun:115,ambient:80,artificial:65,temperature:3800,time:14,exposure:102};
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e5e7df');
-const renderer = new THREE.WebGLRenderer({antialias:true,alpha:false,preserveDrawingBuffer:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.35:1.75));
+const renderer = new THREE.WebGLRenderer({antialias:!conservative,alpha:false,preserveDrawingBuffer:true,powerPreference:conservative?'low-power':'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,conservative?1:1.5));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.02;
-renderer.shadowMap.enabled = true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
+renderer.shadowMap.enabled = !conservative;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 $('viewport').appendChild(renderer.domElement);
 renderer.domElement.tabIndex = 0;
@@ -36,12 +41,16 @@ perspective.position.set(45.8,1.65,-15.2);
 perspective.lookAt(17,1.9,-12.7);
 const ortho = new THREE.OrthographicCamera(-30,30,18,-18,.1,250);
 let camera = perspective;
-let fineShadows=!mobile;
-const composer=new EffectComposer(renderer);
-const beautyPass=new RenderPass(scene,camera);composer.addPass(beautyPass);
-const aoPass=new SSAOPass(scene,camera,innerWidth,innerHeight,12);aoPass.kernelRadius=.3;aoPass.minDistance=.0005;aoPass.maxDistance=.045;
-composer.addPass(aoPass);composer.addPass(new OutputPass());
-function renderScene(){if(fineShadows&&ready&&!plan){beautyPass.camera=camera;aoPass.camera=camera;composer.render();}else renderer.render(scene,camera);}
+let fineShadows=!conservative;
+let composer=null, beautyPass=null, aoPass=null;
+function ensureComposer(){
+ if(composer)return;
+ composer=new EffectComposer(renderer);
+ beautyPass=new RenderPass(scene,camera);composer.addPass(beautyPass);
+ aoPass=new SSAOPass(scene,camera,innerWidth,innerHeight,12);aoPass.kernelRadius=.3;aoPass.minDistance=.0005;aoPass.maxDistance=.045;
+ composer.addPass(aoPass);composer.addPass(new OutputPass());
+}
+function renderScene(){if(!ready)return;if(fineShadows&&!plan){ensureComposer();beautyPass.camera=camera;aoPass.camera=camera;composer.render();}else renderer.render(scene,camera);}
 let controls = new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true; controls.dampingFactor=.075; controls.minDistance=.35; controls.maxDistance=120; controls.maxPolarAngle=Math.PI*.97;
 controls.target.set(17,1.9,-12.7); controls.update();
@@ -75,7 +84,7 @@ scene.environment = environment; scene.environmentIntensity=.6;
 roomEnv.dispose(); pmrem.dispose();
 const hemi = new THREE.HemisphereLight('#eaf2ff','#6a675c',1.65);scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff1d9',3.2);sun.position.set(12,25,10);sun.target.position.set(26,0,-9);scene.add(sun,sun.target);
-sun.castShadow=true;sun.shadow.mapSize.set(mobile?2048:4096,mobile?2048:4096);
+sun.castShadow=!conservative;sun.shadow.mapSize.set(conservative?1024:4096,conservative?1024:4096);
 Object.assign(sun.shadow.camera,{left:-37,right:37,top:29,bottom:-29,near:.2,far:100});
 sun.shadow.bias=-.00008;sun.shadow.normalBias=.025;sun.shadow.radius=3;
 const interiorLights=[];
@@ -122,17 +131,18 @@ const clayMat=new THREE.MeshStandardMaterial({color:'#e9e6dc',roughness:.88,meta
 const clayGlass=new THREE.MeshStandardMaterial({color:'#d3e2df',transparent:true,opacity:.25,roughness:.4,depthWrite:false,side:THREE.DoubleSide});
 const materialRoles = name => /环形动线/.test(name)?'path':/纯黑训练橡胶/.test(name)?'rubber':/暖白墙顶/.test(name)?'wall':/浅橡木/.test(name)?'wood':/花纹铝板|拉丝银色|抛光导杆|配重钢片|花器|Crom|Crome|Alluminio|INOX|Fsilver|Fsteel|vray_metal/.test(name)?'metal':/透明玻璃|Translucent_Glass/.test(name)?'glass':/灯具发光/.test(name)?'light':/石墨黑|Metal_Nero|metal_black/.test(name)?'frame':/黑色软包|橡胶|缝线|Gomma|Skin_Sel|PP_Imb/.test(name)?'pad':/草坪|叶片/.test(name)?'plant':'native';
 function planarUV(mesh,scaleX,scaleY){
- const p=mesh.geometry.attributes.position, uv=new Float32Array(p.count*2),n=mesh.geometry.attributes.normal;
+ const p=mesh.geometry.attributes.position, uv=new Float32Array(p.count*2),n=mesh.geometry.attributes.normal,v=new THREE.Vector3(),nn=new THREE.Vector3();
  for(let i=0;i<p.count;i++){
-  const v=new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);
-  const nn=n?new THREE.Vector3().fromBufferAttribute(n,i).transformDirection(mesh.matrixWorld):new THREE.Vector3(0,1,0);
+  v.fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld);
+  if(n)nn.fromBufferAttribute(n,i).transformDirection(mesh.matrixWorld);else nn.set(0,1,0);
   if(Math.abs(nn.y)>.6){uv[i*2]=v.x/scaleX;uv[i*2+1]=-v.z/scaleY;}
   else if(Math.abs(nn.x)>.6){uv[i*2]=-v.z/scaleX;uv[i*2+1]=v.y/scaleY;}
   else{uv[i*2]=v.x/scaleX;uv[i*2+1]=v.y/scaleY;}
  }
  mesh.geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
 }
-function importMaterials(){
+async function importMaterials(){
+ const sharedMaterials=new Map();let processed=0;
  model.updateMatrixWorld(true);
  model.traverse(node=>{if(node.userData?.id)sceneNodes.set(node.userData.id,node);});
  for(const component of manifest.components){
@@ -142,11 +152,13 @@ function importMaterials(){
    mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.componentId=component.id;
    const source=Array.isArray(mesh.material)?mesh.material:[mesh.material];
    const converted=source.map(old=>{
+    const key=old.uuid+'|'+[/屋面|梁|檩条|屋架|吊顶/,/柱|墙墩/,/台柜|柜|台面/,/柜|休息|台/].map(r=>r.test(component.name)).join('');
+    if(sharedMaterials.has(key))return sharedMaterials.get(key);
     const role=materialRoles(old.name);let mat;
     if(role==='glass')mat=new THREE.MeshPhysicalMaterial({name:old.name,color:'#dce9e8',metalness:0,roughness:.09,transparent:true,opacity:.22,depthWrite:false,side:THREE.DoubleSide});
     else{mat=old.clone();mat.roughness=.72;mat.metalness=0;mat.side=THREE.DoubleSide;}
     mat.userData={role,baseColor:old.color.clone(),sourceMap:old.map,sourceName:old.name,component};
-    materials.push(mat);return mat;
+    materials.push(mat);sharedMaterials.set(key,mat);return mat;
    });
    mesh.material=Array.isArray(mesh.material)?converted:converted[0];mesh.userData.designMaterial=mesh.material;
    const roles=converted.map(m=>m.userData.role);
@@ -155,6 +167,7 @@ function importMaterials(){
    else if(roles.includes('wall'))planarUV(mesh,1,1);
    if(roles.includes('glass')){mesh.castShadow=false;mesh.renderOrder=2;}
   });
+  if(++processed%5===0){progress('正在准备材质 '+processed+'/'+manifest.componentCount,82+processed/manifest.componentCount*10);await paint();}
  }
  equipment=manifest.components.filter(c=>c.equipment);
 }
@@ -342,7 +355,7 @@ function drawMiniMap(){
  ctx.beginPath();ctx.moveTo(cp[0],cp[1]);ctx.lineTo(t[0],t[1]);ctx.strokeStyle='#3d6346';ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(cp[0],cp[1],4,0,Math.PI*2);ctx.fillStyle='#3d6346';ctx.fill();ctx.strokeStyle='#fffff6';ctx.lineWidth=1.5;ctx.stroke();
 }
 async function loadGallery(){
- try{const entries=await fetch('assets/gallery.json').then(r=>r.json());
+ try{const entries=await fetchJSON('assets/gallery.json');
  $('renderGallery').innerHTML='';for(const entry of entries){const scheme=schemes.schemes.find(s=>s.id===entry.scheme)||schemes.schemes[1];const b=document.createElement('button');b.className='gallery-item';const img=new Image();img.src=entry.src;img.alt=`${scheme.name}效果讨论稿`;img.loading='lazy';b.append(img);const strong=document.createElement('strong');strong.textContent=`${scheme.code} / ${scheme.name}`;b.append(strong);const small=document.createElement('small');small.textContent=entry.caption||scheme.tagline;b.append(small);b.onclick=()=>{$('largeRender').src=entry.src;$('renderCaption').textContent=`${scheme.name} · ${entry.caption||'SU 视图 + imagegen 设计讨论稿'}`;$('renderDialog').showModal();};$('renderGallery').append(b);}
  if(!entries.length)$('renderGallery').innerHTML='<p class="fine-note">效果讨论稿正在整理。当前可先通过「方案」切换三组实时材质与灯光。</p>';
  }catch{$('renderGallery').innerHTML='<p class="fine-note">效果图暂不可用，三维场景可正常探索。</p>';}
@@ -360,7 +373,7 @@ $('planBtn').onclick=()=>ready&&togglePlan();$('miniMapPlan').onclick=()=>ready&
 document.querySelector('.brand').onclick=e=>{e.preventDefault();resetView();};
 $('zonesToggle').onclick=()=>$('zoneDock').classList.toggle('open');
 $('closePanel').onclick=()=>collapsePanel(true);$('panelToggle').onclick=()=>collapsePanel(false);
-$('fineShadows').checked=fineShadows;$('fineShadows').onchange=e=>{fineShadows=e.target.checked;toast(fineShadows?'细腻阴影已开启':'已切换流畅显示');};
+$('fineShadows').checked=fineShadows;$('fineShadows').onchange=e=>{fineShadows=e.target.checked;renderer.shadowMap.enabled=fineShadows;sun.castShadow=fineShadows;renderer.shadowMap.needsUpdate=true;toast(fineShadows?'细腻阴影已开启':'已切换流畅显示');};
 $('clayToggle').onchange=e=>{clay=e.target.checked;applyMaterials();toast(clay?'白模研究 · 暂时隐藏材质':'恢复方案材质');};
 $('roofToggle').onchange=e=>{roofCut=e.target.checked;updateVisibility();};
 $('roofAssemble').onchange=e=>{roofAssembled=e.target.checked;updateVisibility();toast(roofAssembled?'显示屋面与灯具设计建议':'已隐藏设计建议，原生屋架保留');};
@@ -398,7 +411,7 @@ $('joystick').addEventListener('pointermove',e=>{if(e.buttons)updateJoystick(e);
 for(const ev of ['pointerup','pointercancel'])$('joystick').addEventListener(ev,()=>{joystick={x:0,y:0};$('joystickKnob').style.transform='none';});
 function updateJoystick(e){const r=$('joystick').getBoundingClientRect();let x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;const len=Math.hypot(x,y);if(len>31){x*=31/len;y*=31/len;}joystick={x:x/31,y:y/31};$('joystickKnob').style.transform=`translate(${x}px,${y}px)`;}
 for(const [id,d]of [['riseBtn',1],['lowerBtn',-1]]){$(id).onpointerdown=e=>{e.currentTarget.setPointerCapture(e.pointerId);lift=d;};$(id).onpointerup=$(id).onpointercancel=()=>lift=0;}
-function resize(){renderer.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight);perspective.aspect=innerWidth/innerHeight;perspective.updateProjectionMatrix();fitPlan();}
+function resize(){renderer.setSize(innerWidth,innerHeight);composer?.setSize(innerWidth,innerHeight);perspective.aspect=innerWidth/innerHeight;perspective.updateProjectionMatrix();fitPlan();}
 addEventListener('resize',resize);
 function animate(){
  requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);
@@ -416,19 +429,56 @@ function animate(){
  renderScene();
  if(ready&&Math.floor(performance.now()/100)%2===0)drawMiniMap();
 }
+const downloads=new Map();let downloadExpected=0;
+async function fetchBytes(url,track=false){
+ const controller=new AbortController();let timer;
+ const reset=()=>{clearTimeout(timer);timer=setTimeout(()=>controller.abort(),30000);};
+ const abort=()=>controller.abort();window.gymBoot?.signal.addEventListener('abort',abort,{once:true});reset();
+ try{
+  const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw Error('资源下载失败（'+response.status+'）');
+  if(!response.body?.getReader){const data=await response.arrayBuffer();if(track){downloads.set(url,data.byteLength);downloadProgress();}return data;}
+  const reader=response.body.getReader(),chunks=[];let received=0;
+  while(true){const {done,value}=await reader.read();if(done)break;reset();chunks.push(value);received+=value.byteLength;if(track){downloads.set(url,received);downloadProgress();}}
+  const bytes=new Uint8Array(received);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}return bytes.buffer;
+ }catch(error){if(error.name==='AbortError')throw Error('网络传输长时间没有响应，请重试或先看效果图。');throw error;}
+ finally{clearTimeout(timer);window.gymBoot?.signal.removeEventListener('abort',abort);}
+}
+async function fetchJSON(url){return JSON.parse(new TextDecoder().decode(await fetchBytes(url)));}
+function downloadProgress(){const bytes=[...downloads.values()].reduce((s,v)=>s+v,0);progress('下载'+(lightMode?'手机模型 ':'完整模型 ')+(bytes/1e6).toFixed(1)+' / '+(downloadExpected/1e6).toFixed(1)+' MB',10+Math.min(1,bytes/downloadExpected)*65);}
+async function loadModel(){
+ const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+ const base=new URL('assets/',location.href).href;
+ if(lightMode){
+  const info=await fetchJSON('assets/mobile-info.json');downloadExpected=info.bytes;manifest.displayTriangleCount=info.mobileTriangles;
+  const bytes=await fetchBytes('assets/model-mobile.glb',true);progress('模型已下载，正在解码器械与材质…',78);await paint();return loader.parseAsync(bytes,base);
+ }
+ const data=await fetchJSON('assets/model.gltf');const queue=data.buffers.filter(b=>b.uri&&!b.uri.startsWith('data:'));downloadExpected=queue.reduce((s,b)=>s+b.byteLength,0);const blobs=[];
+ try{
+  let next=0;await Promise.all([0,1].map(async()=>{while(next<queue.length){const buffer=queue[next++];const bytes=await fetchBytes(new URL(buffer.uri,base).href,true);buffer.uri=URL.createObjectURL(new Blob([bytes]));blobs.push(buffer.uri);}}));
+  progress('模型已下载，正在解码器械与材质…',78);await paint();return await loader.parseAsync(JSON.stringify(data),base);
+ }finally{blobs.forEach(url=>URL.revokeObjectURL(url));}
+}
+async function loadWoodTexture(){
+ const bytes=await fetchBytes(lightMode?'assets/greywood-mobile.webp':'assets/greywood.png');
+ const url=URL.createObjectURL(new Blob([bytes],{type:lightMode?'image/webp':'image/png'}));
+ try{return await new THREE.TextureLoader().loadAsync(url);}finally{URL.revokeObjectURL(url);}
+}
 async function init(){
  try{
-  [manifest,schemes]=await Promise.all([fetch('assets/model-manifest.json').then(r=>{if(!r.ok)throw Error('模型说明无法载入');return r.json();}),fetch('assets/schemes.json').then(r=>r.json())]);
-  $('loadingText').textContent='载入高精度器械与材质，首次打开请稍候…';
-  const gltf=await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('assets/model.gltf',e=>{if(e.total)$('loadBar').style.width=`${10+e.loaded/e.total*75}%`;});
-  model=gltf.scene;scene.add(model);
-  try { const wood=await new THREE.TextureLoader().loadAsync('assets/greywood.png'); wood.wrapS=wood.wrapT=THREE.RepeatWrapping; wood.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); wood.colorSpace=THREE.SRGBColorSpace; textures.wood.dispose(); textures.wood=wood; roughnessTextures.wood.dispose(); roughnessTextures.wood=wood.clone(); roughnessTextures.wood.colorSpace=THREE.NoColorSpace; } catch(e) { console.warn('使用程序木纹作为备用材质',e.message); }
-  importMaterials();buildDesignUI();buildZones();applyScheme('daylight');updateVisibility();renderEquipment();await loadGallery();
-  $('loadBar').style.width='100%';$('modelStats').textContent=`${manifest.componentCount} 个可控对象 · ${(manifest.triangleCount/1000000).toFixed(2)}M 三角面 · 米制模型`;
-  $('modelDetails').textContent=`来源：${manifest.sourceSkp}。完整原生几何经分组和网页压缩，共 ${manifest.componentCount} 个显示对象、${manifest.equipmentCount} 个器械与配件对象。主训练层标高 4.6 米，网页坐标以训练层为零点。屋架保持原位。可关闭的屋面封板和灯具是设计建议。`;
+  progress('正在读取场馆资料…',5);await paint();
+  [manifest,schemes]=await Promise.all([fetchJSON('assets/model-manifest.json'),fetchJSON('assets/schemes.json')]);
+  const gltf=await loadModel();model=gltf.scene;scene.add(model);
+  progress('正在准备场馆表面…',81);await paint();
+  try { const wood=await loadWoodTexture(); wood.wrapS=wood.wrapT=THREE.RepeatWrapping; wood.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy()); wood.colorSpace=THREE.SRGBColorSpace; textures.wood.dispose(); textures.wood=wood; roughnessTextures.wood.dispose(); roughnessTextures.wood=wood.clone(); roughnessTextures.wood.colorSpace=THREE.NoColorSpace; } catch(e) { console.warn('使用程序木纹作为备用材质',e.message); }
+  await importMaterials();buildDesignUI();buildZones();applyScheme('daylight');updateVisibility();renderEquipment();loadGallery();
+  $('modelStats').textContent=`${manifest.componentCount} 个可控对象 · ${((manifest.displayTriangleCount||manifest.triangleCount)/1000000).toFixed(2)}M 三角面 · ${lightMode?'流畅版':'完整模型'}`;
+  $('modelDetails').textContent=`来源：${manifest.sourceSkp}。${lightMode?'当前为手机轻量显示副本，细小表面经过简化，可切换完整精细版。':'当前为完整原生几何。'}共 ${manifest.componentCount} 个显示对象、${manifest.equipmentCount} 个器械与配件对象。布局和设备位置保留。屋面封板和灯具是设计建议。`;
+  $('qualityMode').value=lightMode?'lite':'full';$('qualityMode').onchange=e=>{const url=new URL(location.href);url.searchParams.set('quality',e.target.value);location.href=url.href;};
   if(mobile)collapsePanel(true);
-  ready=true;renderScene();$('loading').classList.add('loaded');setTimeout(()=>$('loading').remove(),700);
-  window.zhimingViewer={getState:()=>({ready,scheme:activeScheme.id,mode,plan,overview,clay,roofCut,roofAssembled,hiddenEquipment:[...hiddenEquipment],componentCount:sceneNodes.size,equipmentCount:equipment.length,camera:camera.position.toArray(),renderer:renderer.info.render}),setMode,togglePlan,enterZone,applyScheme,focusComponent};
- }catch(error){console.error(error);$('loadingText').textContent='模型暂时无法打开';$('loadBar').style.width='0';const msg=document.createElement('p');msg.style.cssText='max-width:460px;text-align:center;font-size:11px;line-height:1.8';msg.textContent=`请通过网站链接或本地 HTTP 服务访问。${error.message}`;$('loading').append(msg);}
+  progress('正在准备第一帧画面…',95);await paint();await renderer.compileAsync(scene,camera);await paint();
+  if(window.gymBoot?.signal.aborted)throw Error('加载已停止，请点击重新加载。');ready=true;renderScene();window.gymBoot?.finish();$('loading').classList.add('loaded');
+  window.zhimingViewer={getState:()=>({ready,lightMode,scheme:activeScheme.id,mode,plan,overview,clay,roofCut,roofAssembled,hiddenEquipment:[...hiddenEquipment],componentCount:sceneNodes.size,equipmentCount:equipment.length,camera:camera.position.toArray(),renderer:renderer.info.render}),setMode,togglePlan,enterZone,applyScheme,focusComponent};
+ }catch(error){console.error(error);window.gymBoot?.fail(error.message);}
 }
+renderer.domElement.addEventListener('webglcontextlost',event=>{event.preventDefault();ready=false;window.gymBoot?.fail('当前设备的三维图形资源不足，请使用流畅模式或先看效果图。');});
 animate();init();

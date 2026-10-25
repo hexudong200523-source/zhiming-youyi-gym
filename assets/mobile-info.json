@@ -1,0 +1,8 @@
+{
+  "sourceTriangles": 4161541,
+  "mobileTriangles": 884521,
+  "displayObjects": 122,
+  "bytes": 16234256,
+  "targetGeometricErrorMetres": 0.005,
+  "note": "Lossy display LOD; original full model retained. Layout and component identities are preserved."
+}

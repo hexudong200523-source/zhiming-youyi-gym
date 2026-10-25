@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f4f2ec">
 <title>之名友谊店 · 空间实验室</title><meta name="description" content="探索之名健身房的真实模型、材质、光线与独立设计方案。">
-<link rel="stylesheet" href="styles.css?v=20261024">
-<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
+<link rel="stylesheet" href="styles.css?v=20261025-mobile1">
+
 </head>
 <body>
 <div id="viewport" aria-label="之名健身房三维交互视窗"></div>
-<div class="loading" id="loading"><div class="loading-mark">之名<span>ZHIMING</span></div><p id="loadingText">正在打开场馆</p><div class="load-track"><i id="loadBar"></i></div><small>原始空间 · 真实布局 · 自由探索</small></div>
+<div class="loading" id="loading"><div class="loading-mark">之名<span>ZHIMING</span></div><p id="loadingText" role="status" aria-live="polite">正在打开场馆</p><div class="load-track"><i id="loadBar"></i></div><small>原始空间 · 真实布局 · 自由探索</small><p class="loading-hint" id="loadingHint">手机自动使用流畅版，下载进度将在这里显示。</p><div class="loading-actions"><a href="gallery.html">先看效果图 ↗</a><button id="retryLoad" type="button">重新加载</button><a id="liteLink" href="?quality=lite">使用流畅模式</a></div><noscript><p>请启用 JavaScript，或点击上方入口直接看效果图。</p></noscript></div>
 <header class="topbar">
   <a class="brand" href="#" aria-label="回到初始视角"><span class="brand-mark">之名</span><span class="brand-desc">空间实验室<small>SPATIAL DESIGN LAB</small></span></a>
   <div class="header-center"><span class="live-dot"></span>友谊店 · 正确模型<span class="divider"></span><span id="schemeTop">B / 日光留白</span></div>
@@ -20,7 +20,7 @@
   <div class="panel-heading"><span>设计控制台</span><button id="closePanel" aria-label="收起设计面板">×</button></div>
   <div class="panel-tabs" role="tablist"><button data-tab="design" role="tab" aria-selected="true" class="active">方案</button><button data-tab="light" role="tab" aria-selected="false">光线</button><button data-tab="equipment" role="tab" aria-selected="false">设备</button><button data-tab="gallery" role="tab" aria-selected="false">效果图</button></div>
   <div class="panel-content" id="tab-design">
-    <div class="section-label">01 / 空间语言</div>
+    <label class="field-label" for="qualityMode">显示精度</label><select id="qualityMode" class="quality-select"><option value="lite">流畅版 · 约 16 MB · 手机推荐</option><option value="full">完整精细版 · 约 67 MB</option></select><p class="fine-note">切换将重新加载。流畅版简化细小表面，保留布局和设备独立控制。</p><div class="section-label">01 / 空间语言</div>
     <div id="schemeCards" class="scheme-cards"></div>
     <div class="line"></div>
     <div class="section-title">表面与材质 <button id="resetMaterials" class="mini-link">还原方案</button></div>
@@ -56,5 +56,5 @@
 <dialog id="helpDialog"><button class="dialog-close" data-close aria-label="关闭">×</button><div class="section-label">探索指南</div><h2>把视角交给你。</h2><div class="help-grid"><div><b>环视模式</b><p>拖动旋转，滚轮缩放。右键拖动平移。</p></div><div><b>漫游 / 自由飞行</b><p>拖动画面转头，W A S D / 方向键移动，Shift 加速。飞行时 Q / E 升降。</p></div><div><b>触屏设备</b><p>环视时单指旋转、双指缩放。漫游时左侧摇杆移动，右侧画面转头。</p></div><div><b>探索器械</b><p>点击选中，双击定位。通过设备列表单独显示、隐藏。</p></div></div><p class="fine-note">漫游保持视点高度，自由飞行可穿越空间。此版未配置碰撞阻挡。</p><button class="primary-button" data-close>开始探索 ↗</button></dialog>
 <dialog id="detailsDialog"><button class="dialog-close" data-close aria-label="关闭">×</button><div class="section-label">模型依据</div><h2>以你的场馆为起点。</h2><p id="modelDetails"></p><p>网站使用原生模型导出的几何数据。材质、灯光、可见性只在展示中切换。设计效果图是讨论稿，未确认的装修细节仍待核对。</p><p class="fine-note">器械外形精度沿用新上传的 SU 原生组件，不等同于品牌设备的生产级模型。</p></dialog>
 <dialog id="renderDialog" class="render-dialog"><button class="dialog-close" data-close aria-label="关闭">×</button><img id="largeRender" alt="设计方案效果讨论稿"><p id="renderCaption"></p></dialog>
-<noscript>此交互展馆需要启用 JavaScript。</noscript><script type="module" src="app.js?v=20261024"></script>
+<script src="boot.js?v=20261025-mobile1"></script>
 </body></html>
