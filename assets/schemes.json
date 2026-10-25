@@ -1,0 +1,252 @@
+{
+  "defaultScheme": "daylight",
+  "commonMaterials": {
+    "rubber": {
+      "label": "黑色橡胶",
+      "color": "#141716",
+      "roughness": 0.91,
+      "metalness": 0,
+      "bumpScale": 0.012,
+      "texture": "fine-grain-rubber",
+      "notes": "地胶主色恒定；颗粒细微，避免大块白色斑点"
+    },
+    "circulation": {
+      "label": "图1 · 灰米木纹",
+      "color": "#a29d8c",
+      "roughness": 0.76,
+      "metalness": 0,
+      "normalScale": 0.22,
+      "texture": "reference-01-grey-wood",
+      "textureRepeatMeters": [
+        0.2,
+        1.2
+      ],
+      "grainDirection": "follow-existing-path",
+      "notes": "仅用于既有动线表面；照片样板转为均匀照明材质，具体板幅未定"
+    },
+    "equipmentFrame": {
+      "label": "器械 · 深石墨金属",
+      "color": "#1f2323",
+      "roughness": 0.47,
+      "metalness": 0.7
+    },
+    "equipmentPad": {
+      "label": "器械 · 黑色软垫",
+      "color": "#111414",
+      "roughness": 0.88,
+      "metalness": 0
+    },
+    "brushedMetal": {
+      "label": "拉丝银色",
+      "color": "#bac0bf",
+      "roughness": 0.38,
+      "metalness": 0.88
+    },
+    "checkerAluminium": {
+      "label": "窗下 · 银色花纹铝板",
+      "color": "#b8bfbd",
+      "roughness": 0.4,
+      "metalness": 0.86,
+      "normalScale": 0.35,
+      "optional": true
+    },
+    "glass": {
+      "label": "透明玻璃",
+      "color": "#e9f5f5",
+      "roughness": 0.08,
+      "metalness": 0,
+      "transmission": 0.92,
+      "ior": 1.5,
+      "thickness": 0.012
+    },
+    "foliage": {
+      "label": "绿植",
+      "color": "#435e43",
+      "roughness": 0.87,
+      "metalness": 0
+    }
+  },
+  "sharedControls": {
+    "materialGroups": [
+      "rubber",
+      "circulation",
+      "wall",
+      "ceiling",
+      "featureMetal",
+      "equipmentFrame",
+      "equipmentPad",
+      "glass"
+    ],
+    "lightingGroups": [
+      "daylight",
+      "ceiling",
+      "wallWash",
+      "ambientAccent"
+    ],
+    "preserveOnSchemeChange": [
+      "camera",
+      "equipmentVisibility",
+      "zoneIsolation"
+    ],
+    "whiteModel": {
+      "label": "白模",
+      "color": "#e8e7e2",
+      "roughness": 0.85,
+      "metalness": 0,
+      "textures": false,
+      "accentLights": false,
+      "notes": "临时覆盖材质，不改原模型材质；透明玻璃可使用低透明度区分开口"
+    },
+    "lightingUnits": "relative multipliers; adapt to scene scale and actual Three.js light types"
+  },
+  "schemes": [
+    {
+      "id": "silver",
+      "code": "A",
+      "name": "银白光廊",
+      "tagline": "银白连续面 · 柔光 · 灰木温度",
+      "summary": "以柔和中性光、局部拉丝银色和深色器械形成精密、有秩序的训练空间。",
+      "palette": [
+        "#e7eceb",
+        "#bac0bf",
+        "#a29d8c",
+        "#141716",
+        "#bed6df"
+      ],
+      "materials": {
+        "wall": {
+          "color": "#e8ecea",
+          "roughness": 0.8,
+          "metalness": 0
+        },
+        "ceiling": {
+          "color": "#cfd4d2",
+          "roughness": 0.72,
+          "metalness": 0.12
+        },
+        "featureMetal": {
+          "color": "#bec5c4",
+          "roughness": 0.33,
+          "metalness": 0.9
+        },
+        "accent": {
+          "color": "#bed6df",
+          "roughness": 0.6,
+          "metalness": 0.1
+        }
+      },
+      "lighting": {
+        "daylight": 0.75,
+        "ceiling": 1,
+        "wallWash": 0.5,
+        "ambientAccent": 0.12,
+        "kelvin": 4300,
+        "accentColor": "#bed6df",
+        "exposure": 1.05
+      }
+    },
+    {
+      "id": "daylight",
+      "code": "B",
+      "name": "日光留白",
+      "tagline": "白色结构 · 自然光 · 克制收口",
+      "summary": "用白色建筑背景与真实采光突出空间、黑色训练区和灰木动线，银色细节负责收口。",
+      "palette": [
+        "#eeeae1",
+        "#d4d0c5",
+        "#a29d8c",
+        "#141716",
+        "#adb7b4",
+        "#435e43"
+      ],
+      "materials": {
+        "wall": {
+          "color": "#eeeae1",
+          "roughness": 0.87,
+          "metalness": 0
+        },
+        "ceiling": {
+          "color": "#e2e1db",
+          "roughness": 0.85,
+          "metalness": 0
+        },
+        "featureMetal": {
+          "color": "#b4bcba",
+          "roughness": 0.42,
+          "metalness": 0.85
+        },
+        "accent": {
+          "color": "#64766c",
+          "roughness": 0.86,
+          "metalness": 0
+        }
+      },
+      "lighting": {
+        "daylight": 1.15,
+        "ceiling": 0.65,
+        "wallWash": 0.3,
+        "ambientAccent": 0,
+        "kelvin": 3800,
+        "accentColor": "#d9d7c9",
+        "exposure": 1.02
+      }
+    },
+    {
+      "id": "athletic",
+      "code": "C",
+      "name": "都市运动",
+      "tagline": "明亮运动感 · 细竖纹 · 克制色彩",
+      "summary": "以米白和细竖纹建立节奏，用少量深蓝与砖红表达运动气质，保留黑地胶和灰木动线。",
+      "palette": [
+        "#eee8dc",
+        "#b7bfbd",
+        "#a29d8c",
+        "#141716",
+        "#253d56",
+        "#9c4039"
+      ],
+      "materials": {
+        "wall": {
+          "color": "#eee8dc",
+          "roughness": 0.83,
+          "metalness": 0
+        },
+        "ceiling": {
+          "color": "#e7e6df",
+          "roughness": 0.82,
+          "metalness": 0
+        },
+        "featureMetal": {
+          "color": "#bec4c2",
+          "roughness": 0.43,
+          "metalness": 0.82
+        },
+        "flutedPanel": {
+          "color": "#e8e4d8",
+          "roughness": 0.75,
+          "metalness": 0,
+          "normalScale": 0.15
+        },
+        "accent": {
+          "color": "#253d56",
+          "roughness": 0.78,
+          "metalness": 0
+        },
+        "secondaryAccent": {
+          "color": "#9c4039",
+          "roughness": 0.82,
+          "metalness": 0
+        }
+      },
+      "lighting": {
+        "daylight": 0.95,
+        "ceiling": 0.85,
+        "wallWash": 0.45,
+        "ambientAccent": 0,
+        "kelvin": 4000,
+        "accentColor": "#dce2eb",
+        "exposure": 1
+      }
+    }
+  ]
+}

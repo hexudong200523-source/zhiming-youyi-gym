@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f4f2ec">
+<title>之名友谊店 · 空间实验室</title><meta name="description" content="探索之名健身房的真实模型、材质、光线与独立设计方案。">
+<link rel="stylesheet" href="styles.css?v=20261024">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
+</head>
+<body>
+<div id="viewport" aria-label="之名健身房三维交互视窗"></div>
+<div class="loading" id="loading"><div class="loading-mark">之名<span>ZHIMING</span></div><p id="loadingText">正在打开场馆</p><div class="load-track"><i id="loadBar"></i></div><small>原始空间 · 真实布局 · 自由探索</small></div>
+<header class="topbar">
+  <a class="brand" href="#" aria-label="回到初始视角"><span class="brand-mark">之名</span><span class="brand-desc">空间实验室<small>SPATIAL DESIGN LAB</small></span></a>
+  <div class="header-center"><span class="live-dot"></span>友谊店 · 正确模型<span class="divider"></span><span id="schemeTop">B / 日光留白</span></div>
+  <div class="header-actions"><button class="icon-button" id="helpBtn" aria-label="操作说明" title="操作说明">?</button><button class="text-button" id="captureBtn" aria-label="保存视图"><svg viewBox="0 0 24 24"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="4"/></svg><span>保存视图</span></button><button class="icon-button" id="fullscreenBtn" aria-label="全屏" title="全屏"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div>
+</header>
+<nav class="view-toolbar" aria-label="视角模式"><button data-mode="orbit" aria-label="环视" title="环视" class="active"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="10" ry="5"/><path d="M7 4c8 0 14 15 7 16C7 20 1 4 7 4Z"/></svg><span>环视</span></button><button data-mode="walk" aria-label="漫游" title="漫游"><svg viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="m10 20 2-6-3-4 2-3 4 2 3 4M6 14l3-4m3 4 5 6"/></svg><span>漫游</span></button><button data-mode="fly" aria-label="自由飞行" title="自由飞行"><svg viewBox="0 0 24 24"><path d="m3 12 18-8-8 18-2-9-8-1Z"/></svg><span>自由飞行</span></button><span class="tool-separator"></span><button id="planBtn" aria-label="平面图"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 10h8v11m0-11V3m0 12h10"/></svg><span>平面图</span></button><button id="overviewBtn" aria-label="鸟瞰"><svg viewBox="0 0 24 24"><path d="m12 3 10 6-10 6L2 9zm-9 11 9 6 9-6"/></svg><span>鸟瞰</span></button></nav>
+<button id="panelToggle" class="panel-toggle" aria-label="打开设计面板">设计面板 <span>☷</span></button>
+<aside class="inspector" id="inspector">
+  <div class="panel-heading"><span>设计控制台</span><button id="closePanel" aria-label="收起设计面板">×</button></div>
+  <div class="panel-tabs" role="tablist"><button data-tab="design" role="tab" aria-selected="true" class="active">方案</button><button data-tab="light" role="tab" aria-selected="false">光线</button><button data-tab="equipment" role="tab" aria-selected="false">设备</button><button data-tab="gallery" role="tab" aria-selected="false">效果图</button></div>
+  <div class="panel-content" id="tab-design">
+    <div class="section-label">01 / 空间语言</div>
+    <div id="schemeCards" class="scheme-cards"></div>
+    <div class="line"></div>
+    <div class="section-title">表面与材质 <button id="resetMaterials" class="mini-link">还原方案</button></div>
+    <label class="field-label">动线 <span id="pathLabel">灰米木纹 · 图 1</span></label><div id="pathSwatches" class="swatches"></div>
+    <label class="field-label">墙面 <span id="wallLabel">随方案</span></label><div id="wallSwatches" class="swatches"></div>
+    <label class="field-label">金属 <span id="metalLabel">拉丝银色</span></label><div id="metalSwatches" class="swatches"></div>
+    <div class="material-note"><i class="rubber-sample"></i><span>训练区 / 黑色细颗粒橡胶<small>保留原模型地面边界</small></span></div>
+    <div class="line"></div><label class="toggle-row"><span>白模研究<small>看空间、比例与光影</small></span><input id="clayToggle" type="checkbox"><i class="switch"></i></label>
+    <label class="toggle-row"><span>剖开屋顶<small>便于观察内部布局</small></span><input id="roofToggle" type="checkbox"><i class="switch"></i></label><label class="toggle-row"><span>屋面与灯具提案<small>可关闭的装修设计建议</small></span><input id="roofAssemble" type="checkbox" checked><i class="switch"></i></label>
+    <label class="toggle-row"><span>细腻阴影<small>增强接触层次；关闭可提高流畅度</small></span><input id="fineShadows" type="checkbox" checked><i class="switch"></i></label><div class="preset-row"><button class="secondary-button" id="savePreset">保存我的搭配</button><button class="secondary-button" id="loadPreset">读取搭配</button></div>
+  </div>
+  <div class="panel-content hidden" id="tab-light"><div class="section-label">02 / 塑造光的氛围</div><h2>同一空间，不同光感。</h2><p class="panel-intro">调整自然光与人工光，观察材质在真实三维表面上的变化。</p>
+    <div class="light-presets"><button data-light="day" class="active">日间</button><button data-light="golden">暖阳</button><button data-light="night">夜间</button></div>
+    <label class="range-label" for="sunRange">自然光<output id="sunOutput">100%</output></label><input id="sunRange" type="range" min="0" max="200" value="115">
+    <label class="range-label" for="ambientRange">环境补光<output id="ambientOutput">80%</output></label><input id="ambientRange" type="range" min="0" max="180" value="80">
+    <label class="range-label" for="artificialRange">室内灯光<output id="artificialOutput">65%</output></label><input id="artificialRange" type="range" min="0" max="200" value="65">
+    <label class="range-label" for="temperatureRange">灯光色温<output id="temperatureOutput">3800 K</output></label><input id="temperatureRange" type="range" min="2700" max="6500" step="100" value="3800"><div class="range-ends"><span>暖光</span><span>冷光</span></div>
+    <label class="range-label" for="timeRange">日照方向<output id="timeOutput">14:00</output></label><input id="timeRange" type="range" min="7" max="18" step="0.25" value="14"><div class="range-ends"><span>上午</span><span>傍晚</span></div>
+    <label class="range-label" for="exposureRange">曝光<output id="exposureOutput">1.02</output></label><input id="exposureRange" type="range" min="50" max="180" value="102">
+    <p class="fine-note">日照为设计演示，方向可调，未作所在地太阳轨迹或照度计算。</p>
+  </div>
+  <div class="panel-content hidden" id="tab-equipment"><div class="section-label">03 / 理解场馆构成</div><h2>让每个细节可探索。</h2><input class="search" id="equipmentSearch" type="search" placeholder="搜索器械名称…" aria-label="搜索器械"><div class="equipment-summary"><span id="equipmentCount">正在读取设备</span><button id="showAll" class="mini-link">全部显示</button><button id="hideAll" class="mini-link">全部隐藏</button></div><label class="toggle-row"><span>区域聚焦<small>仅显示当前探索区域的器械</small></span><input id="isolateZone" type="checkbox"><i class="switch"></i></label><div id="equipmentList" class="equipment-list"></div><p class="fine-note">器械沿用原 SU 组件与位置。可点击画面中的器械查看和定位。</p></div>
+  <div class="panel-content hidden" id="tab-gallery"><div class="section-label">04 / 材质与氛围推演</div><h2>从空间到效果。</h2><p class="panel-intro">基于 SU 导出视图的独立设计讨论稿。点击大图比较材质与光感。</p><div id="renderGallery"></div><div class="gallery-note">效果图用于风格讨论；准确布局以三维模型及平面图为准。</div></div>
+  <div class="panel-footer"><span class="live-dot"></span>原模型布局保留 <button class="mini-link" id="detailsBtn">模型说明 ↗</button></div>
+</aside>
+<section class="context-card" id="contextCard"><div class="eyebrow">THE ZHIMING EXPERIENCE <span id="zoneCounter">01 / 07</span></div><h1 id="zoneTitle">自由力量区</h1><p id="zoneSubtitle">新模型实景视角 · 日光留白</p><div class="context-actions"><button id="startWalk" class="primary-button">进入漫游 <span>↗</span></button><button id="zonesToggle" class="quiet-button">探索区域 <span>＋</span></button></div></section>
+<div class="zone-dock" id="zoneDock"><div class="dock-label">选择一个区域</div><div id="zoneButtons"></div></div>
+<div class="navigator"><canvas id="miniMap" width="240" height="120" aria-label="场馆位置示意，点击定位"></canvas><div class="map-label"><span>模型方向 ↑</span><button id="miniMapPlan">查看平面 ↗</button></div></div>
+<div class="bottom-status"><span id="statusText">拖动环视 · 滚轮缩放 · 双击器械定位</span><span id="modelStats">正在加载友谊店模型</span></div>
+<div id="touchControls" class="touch-controls hidden"><div id="joystick" class="joystick"><i id="joystickKnob"></i></div><div class="height-controls"><button id="riseBtn" aria-label="上升">↑</button><button id="lowerBtn" aria-label="下降">↓</button></div></div>
+<div class="selection-card hidden" id="selectionCard"><button class="selection-close" id="selectionClose" aria-label="关闭选中器械">×</button><small>选中设备</small><strong id="selectionName"></strong><div><button id="focusSelected">定位查看</button><button id="hideSelected">隐藏设备</button></div></div>
+<div class="toast" id="toast" role="status"></div>
+<dialog id="helpDialog"><button class="dialog-close" data-close aria-label="关闭">×</button><div class="section-label">探索指南</div><h2>把视角交给你。</h2><div class="help-grid"><div><b>环视模式</b><p>拖动旋转，滚轮缩放。右键拖动平移。</p></div><div><b>漫游 / 自由飞行</b><p>拖动画面转头，W A S D / 方向键移动，Shift 加速。飞行时 Q / E 升降。</p></div><div><b>触屏设备</b><p>环视时单指旋转、双指缩放。漫游时左侧摇杆移动，右侧画面转头。</p></div><div><b>探索器械</b><p>点击选中，双击定位。通过设备列表单独显示、隐藏。</p></div></div><p class="fine-note">漫游保持视点高度，自由飞行可穿越空间。此版未配置碰撞阻挡。</p><button class="primary-button" data-close>开始探索 ↗</button></dialog>
+<dialog id="detailsDialog"><button class="dialog-close" data-close aria-label="关闭">×</button><div class="section-label">模型依据</div><h2>以你的场馆为起点。</h2><p id="modelDetails"></p><p>网站使用原生模型导出的几何数据。材质、灯光、可见性只在展示中切换。设计效果图是讨论稿，未确认的装修细节仍待核对。</p><p class="fine-note">器械外形精度沿用新上传的 SU 原生组件，不等同于品牌设备的生产级模型。</p></dialog>
+<dialog id="renderDialog" class="render-dialog"><button class="dialog-close" data-close aria-label="关闭">×</button><img id="largeRender" alt="设计方案效果讨论稿"><p id="renderCaption"></p></dialog>
+<noscript>此交互展馆需要启用 JavaScript。</noscript><script type="module" src="app.js?v=20261024"></script>
+</body></html>
